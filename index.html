@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Gift Certificate Maker</title>
 <meta name="apple-mobile-web-app-title" content="Certificates">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -412,10 +412,11 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
 
 </script>
 <style>
-  :root { --bg:#f4f6f1; --card:#fff; --ink:#2f3a2f; --muted:#6b7566; --accent:#6f8a4e; --line:#d9dfd2; }
+  :root { --bg:#f4f6f1; --card:#fff; --ink:#2f3a2f; --muted:#6b7566; --accent:#6f8a4e; --line:#d9dfd2;
+          --accent-ink:#56703a; --soft:#e6eadf; --danger:#a8483c; --warn-bg:#fff4d6; --warn-line:#e8c766; --warn-ink:#5a4610; --bar-h:69px; }
   * { box-sizing:border-box; }
   body { margin:0; background:var(--bg); color:var(--ink); font-family:Mulish, system-ui, sans-serif; }
-  .wrap { max-width:1200px; margin:0 auto; padding:24px 16px 48px; }
+  .wrap { max-width:1200px; margin:0 auto; padding:24px max(16px, env(safe-area-inset-right)) 48px max(16px, env(safe-area-inset-left)); }
   h1 { font-family:Lora, Georgia, serif; font-weight:400; font-size:28px; margin:0 0 4px; }
   .sub { color:var(--muted); margin:0 0 20px; }
   .grid { display:grid; grid-template-columns: 340px 1fr; gap:24px; align-items:start; }
@@ -449,11 +450,93 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   .price-grid { grid-template-columns: 460px 1fr; }
   @media (max-width: 860px) { .price-grid { grid-template-columns:1fr; } }
   .price-preview { max-width:620px; }
-  .lines input + input { margin-top:8px; }
   #pick { margin-top:8px; }
   .picker { display:grid; gap:6px; margin-top:8px; padding:8px; border:1px solid var(--line); border-radius:8px; background:var(--bg); }
   .picker button { margin:0; text-align:left; font-weight:400; color:var(--ink); background:#fff; border:1px solid var(--line); line-height:1.3; }
   .picker button[aria-selected=true] { border-color:var(--accent); box-shadow:inset 0 0 0 1px var(--accent); }
+
+  /* ---------- Price List tab: treatment editor ---------- */
+  #panel-price { padding-bottom:calc(var(--bar-h) + env(safe-area-inset-bottom)); }   /* room for the fixed save bar */
+  #pl-edit, #pl-preview { min-width:0; }
+  #pl-edit .sub { margin-bottom:14px; font-size:15px; line-height:1.4; }
+  .seg-wrap { position:sticky; top:0; z-index:5; margin:-8px 0 12px; padding:8px 0; background:var(--bg); }
+  .seg { display:flex; background:var(--soft); border-radius:10px; padding:3px; }
+  .seg button { flex:1; width:auto; margin:0; min-height:40px; padding:0 12px; font-size:15px; font-weight:700; color:var(--muted); background:transparent; border:0; border-radius:8px; }
+  .seg button[aria-pressed=true] { color:var(--ink); background:#fff; box-shadow:0 1px 2px rgba(47,58,47,.18); }
+  @media (max-width: 860px) {
+    #panel-price[data-view=edit] #pl-preview, #panel-price[data-view=preview] #pl-edit { display:none; }
+    /* on a phone the save/share buttons go above the page preview, so they're reachable without scrolling */
+    #pl-preview { display:flex; flex-direction:column; }
+    .unsaved-chip { order:-2; }
+    .downloads { order:-1; margin:0 0 12px; }
+  }
+  @media (min-width: 861px) {
+    .seg-wrap { display:none; }
+    /* keep the whole page preview and its buttons in view while scrolling the cards */
+    #pl-preview { position:sticky; top:16px; max-width:clamp(320px, calc((100vh - 290px) * 0.707), 620px); }
+  }
+
+  .list { list-style:none; margin:0; padding:0; display:grid; gap:10px; overflow-anchor:none; }
+  .item { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:10px; display:grid; gap:8px; transition:box-shadow .5s, border-color .5s; }
+  .item.flash { border-color:var(--accent); box-shadow:0 0 0 3px rgba(111,138,78,.25); transition:none; }
+  .line { display:flex; gap:8px; align-items:flex-start; }
+  .name, .box input { font:inherit; font-size:16px; color:var(--ink); -webkit-appearance:none; appearance:none; }
+  .name { flex:1; min-width:0; display:block; min-height:44px; margin:0; padding:10px 12px; line-height:1.4; resize:none; overflow:hidden; border:1px solid var(--line); border-radius:8px; background:#fff; }
+  .name:focus, .box:focus-within { outline:2px solid var(--accent); outline-offset:-1px; border-color:transparent; }
+  .item ::placeholder { color:#a3ab9c; opacity:1; }
+  .box { flex:1 1 0; min-width:0; max-width:112px; display:flex; align-items:center; gap:5px; min-height:44px; margin:0; padding:0 11px; border:1px solid var(--line); border-radius:8px; background:#fff; cursor:text; }
+  .box input { flex:1; width:100%; min-width:0; min-height:42px; padding:0; border:0; background:transparent; border-radius:0; }
+  .box input:focus { outline:0; }
+  .unit { color:var(--muted); font-size:15px; }
+  .gap { flex:1; }
+  .icon { flex:none; width:44px; height:44px; margin:0; padding:0; display:grid; place-items:center; color:var(--accent-ink); background:#fff; border:1px solid var(--line); border-radius:8px; touch-action:manipulation; }
+  .icon svg { width:20px; height:20px; display:block; }
+  .icon:active { background:var(--soft); }
+  .icon:disabled { color:#b9c0b2; background:transparent; cursor:default; }
+  .icon.del { color:var(--danger); border-color:transparent; background:transparent; }
+  .icon.del:active { background:#f7e6e3; }
+  .note { display:none; margin:0; font-size:13px; line-height:1.35; color:var(--warn-ink); }
+  .item.unnamed .note { display:block; }
+  .item.unnamed .name { border-color:var(--warn-line); }
+
+  .empty { margin:0 0 10px; padding:22px 16px; text-align:center; color:var(--muted); font-size:15px; border:1px dashed var(--line); border-radius:12px; }
+  .add { width:100%; min-height:52px; margin:10px 0 0; padding:0 12px; display:flex; align-items:center; justify-content:center; gap:8px; font-size:16px; font-weight:700; color:var(--accent-ink); background:transparent; border:1.5px dashed var(--accent); border-radius:12px; }
+  .add svg { width:18px; height:18px; }
+  .add:active { background:#e9efe1; }
+  .add:disabled { color:var(--muted); border-color:var(--line); cursor:default; }
+  .count { margin:10px 2px 0; font-size:13px; line-height:1.4; color:var(--muted); }
+  .link { display:block; width:auto; margin:18px auto 0; min-height:44px; padding:0 12px; font-size:14px; font-weight:400; color:var(--muted); text-decoration:underline; text-underline-offset:3px; background:transparent; border:0; }
+
+  .unsaved-chip { display:none; margin:0 0 10px; padding:8px 12px; font-size:14px; line-height:1.35; color:var(--warn-ink); background:var(--warn-bg); border:1px solid var(--warn-line); border-radius:10px; }
+  #panel-price.dirty .unsaved-chip { display:block; }
+  .unsaved-chip, .downloads { max-width:620px; }
+  .downloads { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px; }
+  .downloads button { margin-top:0; }
+
+  /* fixed bar with the Save list button (inside the Price List panel, so it disappears on the other tab) */
+  .bar { position:fixed; left:0; right:0; bottom:0; z-index:6; background:#fff; border-top:1px solid var(--line); padding:10px max(16px, env(safe-area-inset-right)) calc(10px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); }
+  #panel-price.dirty .bar { border-top:2px solid var(--warn-line); padding-top:9px; }
+  .bar-in { max-width:1168px; margin:0 auto; display:flex; align-items:center; gap:8px; }
+  .status { flex:1; min-width:0; font-size:13px; line-height:1.3; color:var(--muted); }
+  .status strong { display:block; font-size:14px; color:var(--ink); }
+  #panel-price.dirty .status strong { color:var(--warn-ink); }
+  .btn { flex:none; width:auto; margin:0; min-height:48px; padding:0 18px; font-size:16px; font-weight:700; border-radius:10px; border:1px solid transparent; touch-action:manipulation; }
+  .btn.primary { min-width:96px; color:#fff; background:var(--accent); }
+  .btn.primary:disabled { color:var(--muted); background:var(--soft); cursor:default; filter:none; }
+  .btn.ghost { padding:0 12px; color:var(--muted); background:transparent; }
+  .btn.ghost:active { background:var(--soft); }
+
+  .toast { position:fixed; z-index:7; left:12px; right:12px; bottom:calc(var(--bar-h) + env(safe-area-inset-bottom) + 12px); max-width:460px; margin:0 auto; display:flex; align-items:center; gap:8px; min-height:48px; padding:4px 6px 4px 16px; font-size:15px; line-height:1.3; color:#fff; background:#2f3a2f; border-radius:12px; box-shadow:0 6px 20px rgba(47,58,47,.28); }
+  .toast span { flex:1; min-width:0; padding:8px 0; }
+  .toast button { flex:none; width:auto; margin:0; min-height:40px; padding:0 12px; font-size:15px; font-weight:700; color:#d5e8bd; background:transparent; border:0; border-radius:8px; }
+  @media (prefers-reduced-motion: no-preference) { .toast { animation:rise .18s ease-out; } }
+  @keyframes rise { from { transform:translateY(8px); opacity:0; } }
+
+  @media (max-width: 359px) {   /* smallest iPhones (320px wide) */
+    .gap, #pl-status-detail { display:none; }
+    .line { gap:6px; }
+    .box { padding:0 8px; gap:3px; max-width:none; }
+  }
 </style>
 </head>
 <body>
@@ -513,30 +596,42 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   </div>
   </div>
 
-  <div id="panel-price" role="tabpanel" aria-labelledby="tab-price" hidden>
-  <p class="sub">Edit the treatments and prices. The preview updates as you type; then download the PDF.</p>
-  <div class="grid price-grid">
-    <form id="pf" onsubmit="return false">
-      <label for="p1">Treatments and prices</label>
-      <div class="lines">
-        <input id="p1" aria-label="Line 1" autocomplete="off" value="60 minutes Swedish Massage full body £50">
-        <input id="p2" aria-label="Line 2" autocomplete="off" value="60 minutes Hot Stones Massage full body £55">
-        <input id="p3" aria-label="Line 3" autocomplete="off" value="45 minutes Neck, Back, Shoulder Massage £40">
-        <input id="p4" aria-label="Line 4" autocomplete="off" value="45 minutes Hot Stones Neck, Back, Shoulder Massage £45">
-        <input id="p5" aria-label="Line 5" autocomplete="off" value="75 minutes Oncology Consultation &amp; Reflexology (first session) £50">
-        <input id="p6" aria-label="Line 6" autocomplete="off" value="45 minutes Oncology Reflexology (follow up sessions) £45">
-        <input id="p7" aria-label="Line 7" autocomplete="off" value="60 minutes Hand &amp; Foot Reflexology £50">
-        <input id="p8" aria-label="Line 8" autocomplete="off" value="60 minutes Consultation &amp; Reflexology (first session) £45">
-        <input id="p9" aria-label="Line 9" autocomplete="off" value="45 minutes Reflexology (follow up sessions) £40">
-        <input id="p10" aria-label="Line 10" autocomplete="off" value="45 minutes Indian Head Massage £40">
-      </div>
-      <div class="hint">Start with the length (e.g. “60 minutes”) and end with the price (e.g. “£50”). Empty boxes are left off the list.</div>
-
-      <button type="button" id="pdl">Download PDF</button>
-      <button type="button" class="secondary" id="ppng">Download as image (PNG)</button>
-    </form>
-    <div class="preview price-preview"><canvas id="pc"></canvas></div>
+  <div id="panel-price" role="tabpanel" aria-labelledby="tab-price" data-view="edit" hidden>
+  <div class="seg-wrap">
+    <div class="seg" role="group" aria-label="View">
+      <button type="button" id="pl-seg-edit" aria-pressed="true">Edit list</button>
+      <button type="button" id="pl-seg-preview" aria-pressed="false">Preview &amp; PDF</button>
+    </div>
   </div>
+  <div class="grid price-grid">
+    <section id="pl-edit" aria-label="Edit treatments">
+      <p class="sub">Change a name, length or price, then press <strong>Save list</strong>. Your saved list opens automatically next time.</p>
+      <p class="empty" id="pl-empty" hidden>No treatments yet. Add your first one below.</p>
+      <ol class="list" id="pl-list"></ol>
+      <button type="button" class="add" id="pl-add">
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M10 4v12M4 10h12"/></svg>
+        <span id="pl-add-text">Add a treatment</span>
+      </button>
+      <p class="count" id="pl-count"></p>
+      <button type="button" class="link" id="pl-restore">Put back the original price list</button>
+    </section>
+    <section id="pl-preview" aria-label="Preview and download">
+      <p class="unsaved-chip">This preview includes changes you haven’t saved yet.</p>
+      <div class="preview price-preview"><canvas id="pc" role="img" aria-label="Preview of the printed price list"></canvas></div>
+      <div class="downloads">
+        <button type="button" id="pdl">Download PDF</button>
+        <button type="button" class="secondary" id="ppng">Download as image (PNG)</button>
+      </div>
+    </section>
+  </div>
+  <div class="toast" id="pl-toast" role="status" hidden><span id="pl-toast-text"></span><button type="button" id="pl-toast-undo">Undo</button></div>
+  <footer class="bar">
+    <div class="bar-in">
+      <div class="status" aria-live="polite"><strong id="pl-status-title"></strong><span id="pl-status-detail"></span></div>
+      <button type="button" class="btn ghost" id="pl-discard" hidden>Discard</button>
+      <button type="button" class="btn primary" id="pl-save" disabled>Save list</button>
+    </div>
+  </footer>
   </div>
 </div>
 
@@ -717,18 +812,288 @@ const PL = 150, PR = PW - 150;               // left / right text limits
 const pcanvas = $("pc"), pctx = pcanvas.getContext("2d");
 pcanvas.width = PW * PSCALE; pcanvas.height = PH * PSCALE;
 const logo = new Image();
-const LINE_IDS = Array.from({ length: 10 }, (_, i) => "p" + (i + 1));
 
-// "60 minutes Swedish Massage full body £50" -> { dur: "60 minutes", name: "Swedish Massage full body", price: "£50" }
-function splitLine(s) {
-  let name = s.trim(), price = "", dur = "";
-  const pm = name.match(/\s*[-–—:]?\s*(£\s*\d[\d,.]*)\s*$/);
-  if (pm) { price = pm[1].replace(/\s+/g, ""); name = name.slice(0, pm.index).trim(); }
-  const dm = name.match(/^(\d+\s*(?:minutes?|mins?|hours?|hrs?))\b[\s,:–-]*/i);
-  if (dm) { dur = dm[1]; name = name.slice(dm[0].length).trim(); }
-  if (!name) { name = dur; dur = ""; }
-  return { dur, name, price };
+// ----- the list of treatments: edited as cards, kept in this browser's localStorage once "Save list" is pressed -----
+const PRICE_KEY = "soleStories.priceList.v1";
+const MAX_ITEMS = 20, ROOMY = 12;          // hard limit for one A4 page / point where a "check the preview" hint appears
+const PRICE_DEFAULTS = [
+  { dur: "60", name: "Swedish Massage full body", price: "50" },
+  { dur: "60", name: "Hot Stones Massage full body", price: "55" },
+  { dur: "45", name: "Neck, Back, Shoulder Massage", price: "40" },
+  { dur: "45", name: "Hot Stones Neck, Back, Shoulder Massage", price: "45" },
+  { dur: "75", name: "Oncology Consultation & Reflexology (first session)", price: "50" },
+  { dur: "45", name: "Oncology Reflexology (follow up sessions)", price: "45" },
+  { dur: "60", name: "Hand & Foot Reflexology", price: "50" },
+  { dur: "60", name: "Consultation & Reflexology (first session)", price: "45" },
+  { dur: "45", name: "Reflexology (follow up sessions)", price: "40" },
+  { dur: "45", name: "Indian Head Massage", price: "40" }
+];
+
+const tidyName = s => s.replace(/\s+/g, " ").trim();
+const cleanDur = s => s.replace(/\D/g, "").slice(0, 3);
+function cleanPrice(s) {                   // while typing: digits and one decimal point
+  s = s.replace(/,/g, ".").replace(/[^\d.]/g, "");
+  const i = s.indexOf(".");
+  if (i >= 0) s = s.slice(0, i + 1) + s.slice(i + 1).replace(/\./g, "").slice(0, 2);
+  return s.slice(0, 7);
 }
+function tidyPrice(s) {                    // when finished: "47.5" -> "47.50", "50." -> "50"
+  const n = Number(s);
+  if (!s || !isFinite(n)) return "";
+  return Number.isInteger(n) ? String(n) : n.toFixed(2);
+}
+const isBlank = it => !tidyName(it.name) && !it.dur && !it.price;
+const plain = arr => arr.filter(it => !isBlank(it)).map(it => ({ name: tidyName(it.name), dur: cleanDur(it.dur), price: tidyPrice(it.price) }));
+const sig = arr => JSON.stringify(plain(arr));
+
+let uid = 0;
+const withIds = arr => arr.map(it => ({ id: ++uid, name: it.name, dur: it.dur, price: it.price }));
+
+function readSaved() {
+  try {
+    const d = JSON.parse(localStorage.getItem(PRICE_KEY) || "null");
+    if (!d || !Array.isArray(d.items)) return null;
+    const str = v => (typeof v === "string" || typeof v === "number") ? String(v) : "";
+    const items = d.items.filter(x => x && typeof x === "object")
+      .map(x => ({ name: tidyName(str(x.name)), dur: cleanDur(str(x.dur)), price: tidyPrice(cleanPrice(str(x.price))) }))
+      .slice(0, MAX_ITEMS);
+    return { savedAt: typeof d.savedAt === "string" ? d.savedAt : "", items };
+  } catch (e) { return null; }
+}
+
+let saved = readSaved();                               // null until "Save list" has been pressed on this device
+let baseline = saved ? saved.items : PRICE_DEFAULTS;   // what "Discard" goes back to
+let baselineSig = sig(baseline);
+let items = withIds(baseline);                         // the working copy being edited (this is what the preview/PDF shows)
+const dirty = () => sig(items) !== baselineSig;
+
+const pricePanel = $("panel-price"), plist = $("pl-list");
+const ICON = {
+  up:   '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l5-5 5 5"/></svg>',
+  down: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 7.5l5 5 5-5"/></svg>',
+  bin:  '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 5.5h13M8 5.5V4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v1.5M5.5 5.5l.7 10a1.5 1.5 0 0 0 1.5 1.5h4.6a1.5 1.5 0 0 0 1.5-1.5l.7-10M8.5 9v5M11.5 9v5"/></svg>'
+};
+
+function card(it) {
+  const li = document.createElement("li");
+  li.className = "item";
+  li.dataset.id = it.id;
+  li.innerHTML =
+    '<div class="line">' +
+      '<textarea class="name" rows="1" maxlength="90" placeholder="Treatment name" autocomplete="off" enterkeyhint="done"></textarea>' +
+      '<button type="button" class="icon del">' + ICON.bin + '</button>' +
+    '</div>' +
+    '<div class="line">' +
+      '<label class="box"><input class="dur" inputmode="numeric" pattern="[0-9]*" maxlength="3" placeholder="0" autocomplete="off"><span class="unit">min</span></label>' +
+      '<label class="box"><span class="unit">£</span><input class="price" inputmode="decimal" maxlength="7" placeholder="0" autocomplete="off"></label>' +
+      '<span class="gap"></span>' +
+      '<button type="button" class="icon up">' + ICON.up + '</button>' +
+      '<button type="button" class="icon down">' + ICON.down + '</button>' +
+    '</div>' +
+    '<p class="note">Add a name, or this one is left off the price list.</p>';
+  li.querySelector(".name").value = it.name;
+  li.querySelector(".dur").value = it.dur;
+  li.querySelector(".price").value = it.price;
+  return li;
+}
+
+// Name boxes grow to fit long names. (Measures 0 while the tab is hidden, so showTab/showView call this again.)
+function autosize(ta) { ta.style.height = "auto"; if (ta.scrollHeight) ta.style.height = ta.scrollHeight + 2 + "px"; }
+function autosizeAll() { plist.querySelectorAll(".name").forEach(autosize); }
+
+function renderList() {
+  plist.textContent = "";
+  items.forEach(it => plist.appendChild(card(it)));
+  autosizeAll();
+  refresh();
+}
+
+// Everything that depends on the current state but doesn't rebuild the cards (so typing never loses focus).
+function refresh() {
+  const n = items.length;
+  [...plist.children].forEach((li, i) => {
+    const it = items[i], name = tidyName(it.name), label = name || "treatment " + (i + 1);
+    li.classList.toggle("unnamed", !name && !isBlank(it));
+    li.querySelector(".name").setAttribute("aria-label", "Name of treatment " + (i + 1));
+    li.querySelector(".dur").setAttribute("aria-label", "Length of " + label + " in minutes");
+    li.querySelector(".price").setAttribute("aria-label", "Price of " + label + " in pounds");
+    li.querySelector(".del").setAttribute("aria-label", "Remove " + label);
+    const up = li.querySelector(".up"), down = li.querySelector(".down");
+    up.setAttribute("aria-label", "Move " + label + " up");
+    down.setAttribute("aria-label", "Move " + label + " down");
+    up.disabled = i === 0; down.disabled = i === n - 1;
+  });
+  $("pl-empty").hidden = n > 0;
+  $("pl-add").disabled = n >= MAX_ITEMS;
+  $("pl-add-text").textContent = n >= MAX_ITEMS ? "The page is full (" + MAX_ITEMS + " treatments)" : "Add a treatment";
+  $("pl-count").textContent = n === 0 ? "" :
+    n + (n === 1 ? " treatment" : " treatments") + (n > ROOMY ? ". The print gets smaller as the list gets longer, so check the preview." : ".");
+
+  const d = dirty();
+  pricePanel.classList.toggle("dirty", d);
+  $("pl-save").disabled = !d;
+  $("pl-save").textContent = !d && saved ? "Saved" : "Save list";
+  $("pl-discard").hidden = !d;
+  if (d)          { $("pl-status-title").textContent = "Unsaved changes";      $("pl-status-detail").textContent = "Not saved yet"; }
+  else if (saved) { $("pl-status-title").textContent = "Saved on this device"; $("pl-status-detail").textContent = when(saved.savedAt); }
+  else            { $("pl-status-title").textContent = "Original price list";  $("pl-status-detail").textContent = "Nothing changed yet"; }
+  $("pl-restore").hidden = sig(items) === sig(PRICE_DEFAULTS);
+  queuePreview();
+}
+
+function when(isoStr) {
+  const d = new Date(isoStr);
+  if (!isoStr || isNaN(d)) return "";
+  const time = d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  const today = new Date().toDateString() === d.toDateString();
+  return (today ? "Today" : d.toLocaleDateString([], { day: "numeric", month: "short" })) + " at " + time;
+}
+
+const itemOf = el => { const li = el.closest(".item"); return li ? items.find(it => it.id === +li.dataset.id) : null; };
+
+plist.addEventListener("input", e => {
+  const t = e.target, it = itemOf(t);
+  if (!it) return;
+  if (t.classList.contains("name")) {
+    if (/[\r\n]/.test(t.value)) t.value = t.value.replace(/[\r\n]+/g, " ");
+    it.name = t.value; autosize(t);
+  } else if (t.classList.contains("dur")) {
+    const v = cleanDur(t.value); if (v !== t.value) t.value = v;
+    it.dur = v;
+  } else if (t.classList.contains("price")) {
+    const v = cleanPrice(t.value); if (v !== t.value) t.value = v;
+    it.price = v;
+  }
+  hideToast();
+  refresh();
+});
+plist.addEventListener("keydown", e => {
+  if (e.key === "Enter" && e.target.matches(".name, .dur, .price")) { e.preventDefault(); e.target.blur(); }
+});
+plist.addEventListener("focusout", e => {         // tidy up once a box is left
+  const t = e.target, it = itemOf(t);
+  if (!it) return;
+  if (t.classList.contains("price")) { it.price = t.value = tidyPrice(it.price); }
+  if (t.classList.contains("name"))  { it.name = t.value = tidyName(it.name); autosize(t); }
+});
+plist.addEventListener("click", e => {
+  const b = e.target.closest("button"), it = b && itemOf(b);
+  if (!it) return;
+  if (b.classList.contains("del")) removeItem(it);
+  else if (b.classList.contains("up")) moveItem(it, -1);
+  else if (b.classList.contains("down")) moveItem(it, 1);
+});
+
+function flash(li) {
+  li.classList.add("flash");
+  setTimeout(() => li.classList.remove("flash"), 350);
+}
+
+function moveItem(it, dir) {
+  const i = items.indexOf(it), j = i + dir;
+  if (j < 0 || j >= items.length) return;
+  const li = plist.children[i], other = plist.children[j];
+  const before = li.getBoundingClientRect().top;
+  items[i] = items[j]; items[j] = it;
+  if (dir < 0) plist.insertBefore(li, other); else plist.insertBefore(other, li);
+  // Scroll by the distance the card travelled, so it (and the arrow just pressed) stays under the finger.
+  window.scrollBy(0, li.getBoundingClientRect().top - before);
+  hideToast();
+  refresh();
+  flash(li);
+  const same = li.querySelector(dir < 0 ? ".up" : ".down");
+  (same.disabled ? li.querySelector(dir < 0 ? ".down" : ".up") : same).focus({ preventScroll: true });
+}
+
+function removeItem(it) {
+  const i = items.indexOf(it), wasBlank = isBlank(it);
+  items.splice(i, 1);
+  plist.children[i].remove();
+  refresh();
+  if (wasBlank) { hideToast(); return; }
+  const name = tidyName(it.name) || "treatment";
+  toast("Removed “" + (name.length > 28 ? name.slice(0, 27) + "…" : name) + "”", () => {
+    const at = Math.min(i, items.length);
+    items.splice(at, 0, it);
+    const li = card(it);
+    plist.insertBefore(li, plist.children[at] || null);
+    autosize(li.querySelector(".name"));
+    refresh();
+    flash(li);
+    li.scrollIntoView({ block: "nearest" });
+  });
+}
+
+$("pl-add").onclick = () => {
+  if (items.length >= MAX_ITEMS) return;
+  const it = { id: ++uid, name: "", dur: "", price: "" };
+  items.push(it);
+  const li = card(it);
+  plist.appendChild(li);
+  hideToast();
+  refresh();
+  li.scrollIntoView({ block: "center" });
+  li.querySelector(".name").focus();
+};
+
+function replaceAll(next, message) {      // used by Discard and "put back the original"; both can be undone
+  const before = items;
+  items = next;
+  renderList();
+  toast(message, () => { items = before; renderList(); });
+}
+$("pl-discard").onclick = () => replaceAll(withIds(baseline), "Changes discarded");
+$("pl-restore").onclick = () => replaceAll(withIds(PRICE_DEFAULTS), "Original list put back. Press Save list to keep it.");
+
+$("pl-save").onclick = () => {
+  const data = plain(items);              // drops completely empty cards
+  const stamp = new Date().toISOString();
+  try {
+    localStorage.setItem(PRICE_KEY, JSON.stringify({ v: 1, savedAt: stamp, items: data }));
+    if (localStorage.getItem(PRICE_KEY) === null) throw new Error("not stored");
+  } catch (e) {
+    toast("Couldn’t save on this device. If Safari is in Private Browsing, switch it off and try again.");
+    return;
+  }
+  saved = { savedAt: stamp, items: data };
+  baseline = data; baselineSig = sig(data);
+  items = items.filter(it => !isBlank(it));          // show exactly what was stored (tidied, empty cards gone)
+  items.forEach((it, i) => Object.assign(it, data[i]));
+  renderList();
+  toast("Price list saved");
+};
+
+let toastTimer = 0, undoFn = null;
+function toast(message, undo) {
+  clearTimeout(toastTimer);
+  undoFn = undo || null;
+  $("pl-toast-text").textContent = message;
+  $("pl-toast-undo").hidden = !undo;
+  $("pl-toast").hidden = true; void $("pl-toast").offsetWidth; $("pl-toast").hidden = false;   // restart the entrance animation
+  toastTimer = setTimeout(hideToast, undo ? 7000 : 3500);
+}
+function hideToast() { clearTimeout(toastTimer); undoFn = null; $("pl-toast").hidden = true; }
+$("pl-toast-undo").onclick = () => { const fn = undoFn; hideToast(); if (fn) fn(); };
+
+// "Edit list" / "Preview & PDF" switch (phones only; wide screens show both side by side)
+function showView(name) {
+  pricePanel.dataset.view = name;
+  $("pl-seg-edit").setAttribute("aria-pressed", name === "edit");
+  $("pl-seg-preview").setAttribute("aria-pressed", name === "preview");
+  window.scrollTo(0, 0);
+  if (name === "edit") autosizeAll();
+}
+$("pl-seg-edit").onclick = () => showView("edit");
+$("pl-seg-preview").onclick = () => { if (document.activeElement) document.activeElement.blur(); showView("preview"); };
+window.addEventListener("resize", autosizeAll);
+
+let previewQueued = false;
+function queuePreview() {                 // redraw at most once per frame while typing
+  if (previewQueued) return;
+  previewQueued = true;
+  requestAnimationFrame(() => { previewQueued = false; renderPrice(); });
+}
+renderList();
 
 function fitFont(c, text, family, size, maxW, min = 16) {
   c.font = size + "px " + family;
@@ -757,33 +1122,36 @@ function renderPrice() {
   c.beginPath(); c.moveTo(PW / 2 - 70, titleY + 32); c.lineTo(PW / 2 + 70, titleY + 32); c.stroke();
   c.textAlign = "left";
 
-  const items = LINE_IDS.map(id => splitLine($(id).value)).filter(it => it.name);
-  if (!items.length) return;
+  const rows = plain(items).filter(it => it.name);   // cards without a name are left off
+  if (!rows.length) return;
   const top = titleY + 95, bottom = PH - 120;
-  const rowH = Math.min(110, (bottom - top) / items.length);
+  const rowH = Math.min(110, (bottom - top) / rows.length);
+  const k = Math.min(1, rowH / 90);                  // shrink the type once there are more rows than fit at full size
 
-  items.forEach((it, i) => {
-    const y = top + i * rowH + (it.dur ? 0 : 14);   // nudge single-line rows to sit mid-row
+  rows.forEach((it, i) => {
+    const y = top + i * rowH + (it.dur ? 0 : 14 * k);   // nudge single-line rows to sit mid-row
+    const price = it.price ? "£" + it.price : "";
     let priceW = 0;
-    if (it.price) {
-      c.font = "36px " + SERIF; c.fillStyle = PRICE_INK; c.textAlign = "right";
-      c.fillText(it.price, PR, y + 34);
-      priceW = c.measureText(it.price).width;
+    if (price) {
+      c.font = 36 * k + "px " + SERIF; c.fillStyle = PRICE_INK; c.textAlign = "right";
+      c.fillText(price, PR, y + 34 * k);
+      priceW = c.measureText(price).width;
       c.textAlign = "left";
     }
     const maxNameW = PR - PL - (priceW ? priceW + 70 : 0);
-    fitFont(c, it.name, SERIF, 33, maxNameW);
+    fitFont(c, it.name, SERIF, 33 * k, maxNameW, 12);
     c.fillStyle = PRICE_INK;
-    c.fillText(it.name, PL, y + 34);
-    if (it.price) {   // dotted leader between name and price
+    c.fillText(it.name, PL, y + 34 * k);
+    if (price) {   // dotted leader between name and price
       const from = PL + c.measureText(it.name).width + 18, to = PR - priceW - 18;
       c.fillStyle = LAVENDER;
-      for (let x = from; x <= to; x += 11) { c.beginPath(); c.arc(x, y + 28, 1.7, 0, Math.PI * 2); c.fill(); }
+      for (let x = from; x <= to; x += 11) { c.beginPath(); c.arc(x, y + 28 * k, 1.7, 0, Math.PI * 2); c.fill(); }
     }
     if (it.dur) {
-      fitFont(c, it.dur.toUpperCase(), SANS, 22, maxNameW);
+      const dur = it.dur + (it.dur === "1" ? " MINUTE" : " MINUTES");
+      fitFont(c, dur, SANS, 22 * k, maxNameW, 12);
       c.fillStyle = MUTED_INK;
-      c.fillText(it.dur.toUpperCase(), PL, y + 68);
+      c.fillText(dur, PL, y + 68 * k);
     }
   });
 }
@@ -801,7 +1169,6 @@ $("ppng").onclick = () => {
   renderPrice();
   saveOrShare(dataURLToBlob(pcanvas.toDataURL("image/png")), PRICE_FILE + ".png");
 };
-LINE_IDS.forEach(id => $(id).addEventListener("input", renderPrice));
 
 // ---------- tabs ----------
 const TABS = { cert: [$("tab-cert"), $("panel-cert")], price: [$("tab-price"), $("panel-price")] };
@@ -811,6 +1178,7 @@ function showTab(name) {
     tab.setAttribute("aria-selected", key === name ? "true" : "false");
     panel.hidden = key !== name;
   }
+  if (name === "price") autosizeAll();   // name boxes can only be measured once the panel is visible
   try { localStorage.setItem("tab", name); } catch (e) {}
 }
 $("tab-cert").onclick = () => showTab("cert");
@@ -823,6 +1191,7 @@ const fontsReady = Promise.all([document.fonts.load("35px Lora"), document.fonts
 img.onload = () => { render(); fontsReady.then(render); };
 img.src = TEMPLATE;
 logo.onload = () => { renderPrice(); fontsReady.then(renderPrice); };
+fontsReady.then(autosizeAll);
 renderPrice();
 logo.src = LOGO;
 </script>

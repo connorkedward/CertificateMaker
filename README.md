@@ -4,7 +4,9 @@ A self-contained, single-page tool for creating gift certificates.
 
 Fill in **To**, **From**, **Treatment**, and the issue/expiry dates (expiry defaults to six months after issue), then download the certificate as a **PDF** or **PNG**.
 
-The **Price List** tab makes an A4 price list with the Sole Stories logo. Edit the ten treatment lines (each one starts with the length and ends with the price, e.g. `60 minutes Swedish Massage full body £50`), then download it as a **PDF** or **PNG**.
+The **Price List** tab makes an A4 price list with the Sole Stories logo. Each treatment is a card with a name, a length in minutes and a price; treatments can be added, removed and reordered (up to 20). **Save list** stores the list in the browser (`localStorage`), and the saved list is loaded automatically the next time the page is opened on that device. Download the list as a **PDF** or **PNG** from the preview.
+
+The saved list belongs to one browser on one device: saving on the iPhone does not change the list on a laptop, and on iPhone the Home Screen icon and Safari each keep their own copy.
 
 ## Usage
 

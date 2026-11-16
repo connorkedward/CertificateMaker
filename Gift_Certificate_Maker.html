@@ -4,6 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Gift Certificate Maker</title>
+<meta name="apple-mobile-web-app-title" content="Certificates">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400&family=Mulish:wght@400&display=swap" rel="stylesheet">
@@ -420,18 +423,23 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   form { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:20px; }
   label { display:block; font-size:13px; color:var(--muted); margin:14px 0 6px; }
   label:first-child { margin-top:0; }
-  input { width:100%; padding:10px 12px; font:inherit; font-size:15px; border:1px solid var(--line); border-radius:8px; background:#fff; color:var(--ink); }
+  input { width:100%; min-height:44px; padding:10px 12px; font:inherit; font-size:16px; border:1px solid var(--line); border-radius:8px; background:#fff; color:var(--ink); -webkit-appearance:none; appearance:none; }
+  input[type=date] { display:block; text-align:left; }
+  input[type=date]::-webkit-date-and-time-value { text-align:left; }
+  input:disabled { background:var(--bg); color:var(--ink); -webkit-text-fill-color:var(--ink); opacity:1; }
   input:focus { outline:2px solid var(--accent); outline-offset:-1px; border-color:transparent; }
   .row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
   .row > div, .row input { min-width:0; }
   .hint + .row label { margin-top:16px; }
   .hint { font-size:12px; color:var(--muted); margin-top:6px; }
   .check { display:flex; gap:8px; align-items:center; font-size:13px; color:var(--muted); margin-top:8px; }
-  .check input { width:auto; }
+  .check input { width:auto; min-height:0; -webkit-appearance:checkbox; appearance:auto; }
   button { margin-top:20px; width:100%; padding:12px; font:inherit; font-size:15px; font-weight:600; color:#fff; background:var(--accent); border:0; border-radius:8px; cursor:pointer; }
-  button:hover { filter:brightness(0.95); }
+  @media (hover:hover) { button:hover { filter:brightness(0.95); } }
+  button:active { filter:brightness(0.9); }
   button.secondary { background:#fff; color:var(--accent); border:1px solid var(--accent); margin-top:10px; }
   .preview { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:12px; }
+  .nojs { background:#fff4d6; border:1px solid #e8c766; color:#5a4610; border-radius:12px; padding:14px 16px; margin:0 0 20px; font-size:15px; line-height:1.4; }
   canvas { width:100%; height:auto; display:block; border-radius:4px; }
 </style>
 </head>
@@ -439,6 +447,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
 <div class="wrap">
   <h1>Gift Certificate Maker</h1>
   <p class="sub">Fill in the details. The preview updates as you type; then download the PDF.</p>
+  <div class="nojs" id="nojs"><strong>This page isn’t running properly.</strong> It looks like it has been opened in a preview (for example from Files, Mail or Messages), which switches off the parts that draw the certificate. Open it from its web link in <strong>Safari</strong> instead.</div>
   <div class="grid">
     <form id="f" onsubmit="return false">
       <label for="to">To</label>
@@ -504,7 +513,7 @@ function pretty(d) { return d ? ordinal(d.getDate()) + " " + MONTHS[d.getMonth()
 
 function syncExpiry() {
   const auto = $("auto").checked;
-  $("expiry").readOnly = auto;
+  $("expiry").disabled = auto;
   if (auto) { const i = parse($("issued").value); if (i) $("expiry").value = iso(addMonths(i, 6)); }
 }
 
@@ -536,17 +545,48 @@ function fileBase() {
   return "Sole_Stories_Gift_Certificate" + (name ? "_" + name : "");
 }
 
+// On phones/tablets use the Share sheet (Save Image -> Photos, AirDrop, Messages...);
+// on desktop keep the normal download.
+const TOUCH = window.matchMedia && matchMedia("(pointer: coarse)").matches;
+function canShareFile(file) {
+  try { return TOUCH && !!navigator.canShare && navigator.canShare({ files: [file] }); } catch (e) { return false; }
+}
+function downloadBlob(blob, name) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = name; a.rel = "noopener";
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+}
+function saveOrShare(blob, name) {
+  const file = new File([blob], name, { type: blob.type });
+  if (canShareFile(file)) {
+    navigator.share({ files: [file] }).catch(err => {
+      if (err && err.name !== "AbortError") downloadBlob(blob, name);   // AbortError = user closed the sheet
+    });
+  } else {
+    downloadBlob(blob, name);
+  }
+}
+function dataURLToBlob(url) {   // synchronous, so the Share sheet still counts as a direct tap
+  const [head, b64] = url.split(",");
+  const bin = atob(b64), bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return new Blob([bytes], { type: head.slice(5, head.indexOf(";")) });
+}
+
+if (TOUCH) { $("dl").textContent = "Save / share PDF"; $("png").textContent = "Save / share image (PNG)"; }
+
 $("dl").onclick = () => {
   render();
   const { jsPDF } = window.jspdf;
   const pdf = new jsPDF({ orientation: "landscape", unit: "pt", format: [W, H], compress: true });
   pdf.addImage(canvas.toDataURL("image/jpeg", 0.92), "JPEG", 0, 0, W, H);
-  pdf.save(fileBase() + ".pdf");
+  saveOrShare(pdf.output("blob"), fileBase() + ".pdf");
 };
 $("png").onclick = () => {
   render();
-  const a = document.createElement("a");
-  a.href = canvas.toDataURL("image/png"); a.download = fileBase() + ".png"; a.click();
+  saveOrShare(dataURLToBlob(canvas.toDataURL("image/png")), fileBase() + ".png");
 };
 
 ["to","from","treatment","expiry"].forEach(id => $(id).addEventListener("input", render));
@@ -555,6 +595,7 @@ $("auto").addEventListener("change", () => { syncExpiry(); render(); });
 
 $("issued").value = iso(new Date());
 syncExpiry();
+$("nojs").remove();   // script is running, so hide the "open in Safari" warning
 
 img.onload = () => {
   render();

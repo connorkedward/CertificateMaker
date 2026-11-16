@@ -6,7 +6,9 @@ Fill in **To**, **From**, **Treatment**, and the issue/expiry dates (expiry defa
 
 ## Usage
 
-Open `Gift_Certificate_Maker.html` in any modern browser. No install or build step is needed — everything (including [jsPDF](https://github.com/parallax/jsPDF) 2.5.1 and the certificate artwork) is bundled into the one file. An internet connection is only used to load the Google Fonts (Lora, Mulish).
+**Online (works on iPhone/iPad):** https://connorkedward.github.io/CertificateMaker/ — open it in Safari, then Share → Add to Home Screen for an app-style icon. Hosted with GitHub Pages from the `main` branch; pushing to `main` updates the site.
+
+**Offline:** open `index.html` in any modern desktop browser. No install or build step is needed — everything (including [jsPDF](https://github.com/parallax/jsPDF) 2.5.1 and the certificate artwork) is bundled into the one file. An internet connection is only used to load the Google Fonts (Lora, Mulish).
 
 ## License notes
 

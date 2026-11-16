@@ -9,7 +9,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Lora:wght@400&family=Mulish:wght@400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@400&family=Mulish:wght@400;700&display=swap" rel="stylesheet">
 <script>/* jsPDF 2.5.1 (MIT) */
 /** @license
  *
@@ -502,6 +502,10 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
       </div>
       <label class="check"><input type="checkbox" id="auto" checked> Expiry = issue date + 6 months</label>
 
+      <label for="code">Gift card code</label>
+      <input id="code" readonly placeholder="Press “Generate Code”" autocomplete="off">
+      <button type="button" class="secondary" id="gen">Generate Code</button>
+
       <button type="button" id="dl">Download PDF</button>
       <button type="button" class="secondary" id="png">Download as image (PNG)</button>
     </form>
@@ -584,11 +588,36 @@ function render() {
   ctx.setTransform(SCALE, 0, 0, SCALE, 0, 0);
   ctx.textBaseline = "alphabetic";
   ctx.drawImage(img, 0, 0, W, H);
+  // redraw the template's "To book..." line in bold: cover the original, then write it again
+  ctx.fillStyle = "#f1f7eb";
+  ctx.fillRect(670, 732, 1000, 42);
+  const BOOK = "To book, contact Jessica on 07482 132383", AUTH = "Authorised by Jessica Cook.";
+  let bs = 29;
+  ctx.font = "bold " + bs + "px " + SANS;
+  while (ctx.measureText(BOOK + AUTH).width + 29 > RIGHT - X_LINE && bs > 10) { bs -= 0.5; ctx.font = "bold " + bs + "px " + SANS; }
+  ctx.fillStyle = SANS_INK;
+  ctx.fillText(BOOK, X_LINE, 763);
+  ctx.fillText(AUTH, X_LINE + ctx.measureText(BOOK).width + 29, 763);
   draw($("to").value.trim(),   SANS, 28.5, SANS_INK, 359);
   draw($("from").value.trim(), SANS, 28.5, SANS_INK, 460);
   const t = $("treatment").value.trim();
   if (t) draw("This certificate gifts you with " + article(t) + " " + t, SANS, 28.5, SANS_INK, 554, X_LINE);
   draw(pretty(parse($("expiry").value)), SANS, 28.5, SANS_INK, 676);
+  const code = $("code").value;
+  if (code) {   // centred under the logo, level with the "To book..." line
+    ctx.font = "28.5px " + SANS; ctx.fillStyle = SANS_INK; ctx.textAlign = "center";
+    ctx.fillText("Gift Card Code: " + code, 350, 763);
+    ctx.textAlign = "left";
+  }
+}
+
+// 6 random characters from 0-9 / A-Z, shown as XXX-XXX
+const CODE_CHARS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+function makeCode() {
+  const r = new Uint32Array(6);
+  crypto.getRandomValues(r);
+  const s = Array.from(r, n => CODE_CHARS[n % CODE_CHARS.length]).join("");
+  return s.slice(0, 3) + "-" + s.slice(3);
 }
 
 function fileBase() {
@@ -641,6 +670,7 @@ $("png").onclick = () => {
 };
 
 ["to","from","treatment","expiry"].forEach(id => $(id).addEventListener("input", render));
+$("gen").onclick = () => { $("code").value = makeCode(); render(); };
 
 // Treatment picker: button toggles a list of options; tapping one fills the box.
 function showPicker(open) {
@@ -772,7 +802,7 @@ $("tab-price").onclick = () => showTab("price");
 try { showTab(localStorage.getItem("tab") || "cert"); } catch (e) { showTab("cert"); }
 
 // redraw once web fonts are ready so the previews/PDFs use them
-const fontsReady = Promise.all([document.fonts.load("35px Lora"), document.fonts.load("27px Mulish")])
+const fontsReady = Promise.all([document.fonts.load("35px Lora"), document.fonts.load("27px Mulish"), document.fonts.load("bold 27px Mulish")])
   .then(() => document.fonts.ready).catch(() => {});
 img.onload = () => { render(); fontsReady.then(render); };
 img.src = TEMPLATE;

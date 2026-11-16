@@ -450,6 +450,10 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   @media (max-width: 860px) { .price-grid { grid-template-columns:1fr; } }
   .price-preview { max-width:620px; }
   .lines input + input { margin-top:8px; }
+  #pick { margin-top:8px; }
+  .picker { display:grid; gap:6px; margin-top:8px; padding:8px; border:1px solid var(--line); border-radius:8px; background:var(--bg); }
+  .picker button { margin:0; text-align:left; font-weight:400; color:var(--ink); background:#fff; border:1px solid var(--line); line-height:1.3; }
+  .picker button[aria-selected=true] { border-color:var(--accent); box-shadow:inset 0 0 0 1px var(--accent); }
 </style>
 </head>
 <body>
@@ -470,17 +474,18 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
       <input id="from" placeholder="e.g. The Corporate Services Team" autocomplete="off">
 
       <label for="treatment">Treatment</label>
-      <input id="treatment" list="treatments" value="" autocomplete="off">
-      <datalist id="treatments">
-        <option value="60 minutes Hand and Foot Reflexology treatment">
-        <option value="45 minutes Reflexology treatment">
-        <option value="75 minutes Oncology Reflexology treatment (first session)">
-        <option value="60 minutes Oncology Reflexology treatment (follow up sessions)">
-        <option value="60 minutes Swedish Massage">
-        <option value="60 minutes Hot Stones Massage">
-        <option value="45 minutes Indian Head Massage">
-        <option value="45 minutes Neck, Back and Shoulder Massage">
-      </datalist>
+      <input id="treatment" value="" autocomplete="off" placeholder="Type, or choose from the list">
+      <button type="button" class="secondary" id="pick" aria-expanded="false" aria-controls="treatments">Choose a treatment…</button>
+      <div class="picker" id="treatments" hidden>
+        <button type="button">60 minutes Hand and Foot Reflexology treatment</button>
+        <button type="button">45 minutes Reflexology treatment</button>
+        <button type="button">75 minutes Oncology Reflexology treatment (first session)</button>
+        <button type="button">60 minutes Oncology Reflexology treatment (follow up sessions)</button>
+        <button type="button">60 minutes Swedish Massage</button>
+        <button type="button">60 minutes Hot Stones Massage</button>
+        <button type="button">45 minutes Indian Head Massage</button>
+        <button type="button">45 minutes Neck, Back and Shoulder Massage</button>
+      </div>
       <div class="hint">Printed as “This certificate gifts you with a/an …”</div>
 
       <div class="row">
@@ -634,6 +639,21 @@ $("png").onclick = () => {
 };
 
 ["to","from","treatment","expiry"].forEach(id => $(id).addEventListener("input", render));
+
+// Treatment picker: button toggles a list of options; tapping one fills the box.
+function showPicker(open) {
+  $("treatments").hidden = !open;
+  $("pick").setAttribute("aria-expanded", open);
+  $("pick").textContent = open ? "Close list" : "Choose a treatment…";
+  const cur = $("treatment").value.trim();
+  $("treatments").querySelectorAll("button").forEach(b => b.setAttribute("aria-selected", b.textContent === cur));
+}
+$("pick").onclick = () => showPicker($("treatments").hidden);
+$("treatments").querySelectorAll("button").forEach(b => b.onclick = () => {
+  $("treatment").value = b.textContent;
+  showPicker(false);
+  render();
+});
 $("issued").addEventListener("input", () => { syncExpiry(); render(); });
 $("auto").addEventListener("change", () => { syncExpiry(); render(); });
 

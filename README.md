@@ -4,6 +4,8 @@ A self-contained, single-page tool for creating gift certificates.
 
 Fill in **To**, **From**, **Treatment**, and the issue/expiry dates (expiry defaults to six months after issue), then download the certificate as a **PDF** or **PNG**.
 
+The **Gift Voucher Price List** tab makes an A4 price list with the Sole Stories logo. Edit the ten treatment lines (each one starts with the length and ends with the price, e.g. `60 minutes Swedish Massage full body £50`), then download it as a **PDF** or **PNG**.
+
 ## Usage
 
 **Online (works on iPhone/iPad):** https://connorkedward.github.io/CertificateMaker/ — open it in Safari, then Share → Add to Home Screen for an app-style icon. Hosted with GitHub Pages from the `main` branch; pushing to `main` updates the site.

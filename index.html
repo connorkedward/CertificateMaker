@@ -459,10 +459,14 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
       <label for="treatment">Treatment</label>
       <input id="treatment" list="treatments" value="" autocomplete="off">
       <datalist id="treatments">
-        <option value="75 minutes Hand and Foot Reflexology treatment">
-        <option value="60 minutes Reflexology treatment">
+        <option value="60 minutes Hand and Foot Reflexology treatment">
+        <option value="45 minutes Reflexology treatment">
+        <option value="75 minutes Oncology Reflexology treatment (first session)">
+        <option value="60 minutes Oncology Reflexology treatment (follow up sessions)">
         <option value="60 minutes Swedish Massage">
         <option value="60 minutes Hot Stones Massage">
+        <option value="45 minutes Indian Head Massage">
+        <option value="45 minutes Neck, Back and Shoulder Massage">
       </datalist>
       <div class="hint">Printed as “This certificate gifts you with a/an …”</div>
 
@@ -533,11 +537,11 @@ function render() {
   ctx.setTransform(SCALE, 0, 0, SCALE, 0, 0);
   ctx.textBaseline = "alphabetic";
   ctx.drawImage(img, 0, 0, W, H);
-  draw($("to").value.trim(),   SERIF, 35, SERIF_INK, 359);
-  draw($("from").value.trim(), SERIF, 35, SERIF_INK, 460);
+  draw($("to").value.trim(),   SANS, 28.5, SANS_INK, 359);
+  draw($("from").value.trim(), SANS, 28.5, SANS_INK, 460);
   const t = $("treatment").value.trim();
   if (t) draw("This certificate gifts you with " + article(t) + " " + t, SANS, 28.5, SANS_INK, 554, X_LINE);
-  draw(pretty(parse($("expiry").value)), SERIF, 35, SERIF_INK, 676);
+  draw(pretty(parse($("expiry").value)), SANS, 28.5, SANS_INK, 676);
 }
 
 function fileBase() {
